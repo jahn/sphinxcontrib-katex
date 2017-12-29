@@ -90,7 +90,19 @@ def html_visit_displaymath(self, node):
         self.add_permalink_ref(node, _('Permalink to this equation'))
         self.body.append('</span>')
     self.body.append(self.builder.config.katex_display[0])
-    self.body.append(node['latex'])
+    parts = [prt for prt in node['latex'].split('\n\n') if prt.strip()]
+    if len(parts) > 1:  # Add alignment if there are more than 1 equation
+        self.body.append(r' \begin{aligned}')
+    for i, part in enumerate(parts):
+        part = self.encode(part)
+        if r'\\' in part:
+            self.body.append(r'\begin{aligned}' + part + r'\end{aligned}')
+        else:
+            self.body.append(part)
+        if i < len(parts) - 1:  # append new line if not the last equation
+            self.body.append(r'\\')
+    if len(parts) > 1:  # Add alignment if there are more than 1 equation
+        self.body.append(r'\end{aligned} ')
     self.body.append(self.builder.config.katex_display[1])
     self.body.append('</div>\n')
     raise nodes.SkipNode
